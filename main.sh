@@ -15,7 +15,7 @@ if [ ! -f "$YAML_FILE" ]; then
 fi
 
 # Чтение файла и добавление сайтов
-yq e '.websites[]' $YAML_FILE -o=json | while read -r website; do
+yq e '.websites[]' $YAML_FILE -o=json | while IFS= read -r website; do
     DOMAIN=$(echo $website | jq -r '.domain')
     PORT=$(echo $website | jq -r '.port')
     MAIL=$(echo $website | jq -r '.mail')
@@ -36,8 +36,8 @@ yq e '.websites[]' $YAML_FILE -o=json | while read -r website; do
 
     # Создание директории для сайта
     echo "Создание директории $WEB_ROOT для $DOMAIN..."
-    sudo mkdir -p $WEB_ROOT
-    echo "<html><head><title>Welcome to $DOMAIN</title></head><body><h1>$DOMAIN is working!</h1></body></html>" | sudo tee $WEB_ROOT/index.html
+    sudo mkdir -p "$WEB_ROOT"
+    echo "<html><head><title>Welcome to $DOMAIN</title></head><body><h1>$DOMAIN is working!</h1></body></html>" | sudo tee "$WEB_ROOT/index.html"
 
     # Создание конфигурации Nginx
     echo "Создание конфигурации Nginx для $DOMAIN на порту $PORT..."
@@ -53,21 +53,15 @@ yq e '.websites[]' $YAML_FILE -o=json | while read -r website; do
         location / {
             try_files \$uri \$uri/ =404;
         }
-    }" | sudo tee $CONFIG
+    }" | sudo tee "$CONFIG"
 
     # Активация конфигурации и перезапуск Nginx
-    sudo ln -sf /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
+    sudo ln -sf "/etc/nginx/sites-available/$DOMAIN" "/etc/nginx/sites-enabled/"
     sudo nginx -t && sudo systemctl reload nginx
 
     # Получение сертификата Let's Encrypt (опционально, убрать комментарий для включения)
     if [ -n "$MAIL" ]; then
         echo "Получение сертификата Let's Encrypt для $DOMAIN..."
-        sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos -m $MAIL --redirect
+        sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$MAIL" --redirect
     else
         echo "Электронная почта для $DOMAIN не указана. Пропуск получения сертификата."
-    fi
-
-    echo "Сайт $DOMAIN настроен."
-done
-
-echo "Скрипт завершил работу."
