@@ -13,14 +13,29 @@ jobs:
       uses: webfactory/ssh-agent@v0.5.3
       with:
         ssh-private-key: ${{ secrets.SSH_KEY_PRIVATE }}
+    - name: Clear Remote Directory Before Copying
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY_PRIVATE }}
+        script: |
+          REMOTE_DIRECTORY="${{ secrets.DEFAULT_PATH }}${{ secrets.PROJECT_PATH }}"
+          if [ -d "$REMOTE_DIRECTORY" ]; then
+            echo "Удаление старых файлов в $REMOTE_DIRECTORY..."
+            rm -rf $REMOTE_DIRECTORY/*
+          else
+            echo "Создание директории $REMOTE_DIRECTORY..."
+            mkdir -p $REMOTE_DIRECTORY
+          fi
     - name: Copy Directory to VPS
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY_PRIVATE }}
-        source: "path/to/your/local/directory/*"
-        target: "${{ secrets.PROJECT_PATH }}${{ secrets.DEFAULT_PATH }}"
+        source: "./*"
+        target: "${{ secrets.DEFAULT_PATH }}${{ secrets.PROJECT_PATH }}"
         strip_components: 0
         overwrite: true
     - name: Execute Script on VPS
@@ -30,7 +45,7 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY_PRIVATE }}
         script: |
-          REMOTE_DIRECTORY="${{ secrets.PROJECT_PATH }}${{ secrets.DEFAULT_PATH }}"
+          REMOTE_DIRECTORY="${{ secrets.DEFAULT_PATH }}${{ secrets.PROJECT_PATH }}"
           if [ ! -d "$REMOTE_DIRECTORY" ]; then
             echo "Директория не найдена, что-то пошло не так."
           else
