@@ -2,3 +2,6 @@ websites:
   - domain: gd-agency.ru
     port: 8000
     mail: dp070593gda@gmail.com
+  - domain: nled.gd-agency.ru
+    port: 8001
+    mail: dp070593gda@gmail.com
