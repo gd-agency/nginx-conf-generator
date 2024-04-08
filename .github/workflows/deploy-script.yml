@@ -1,22 +1,18 @@
 name: Deploy and Execute Script
-
 on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-
     - name: Setup SSH
       uses: webfactory/ssh-agent@v0.5.3
       with:
         ssh-private-key: ${{ secrets.SSH_KEY }}
-
     - name: Copy Directory to VPS
       uses: appleboy/scp-action@master
       with:
@@ -27,7 +23,6 @@ jobs:
         target: "${{ secrets.PROJECT_PATH }}${{ secrets.DEFAULT_PATH }}"
         strip_components: 0
         overwrite: true
-
     - name: Execute Script on VPS
       uses: appleboy/ssh-action@master
       with:
