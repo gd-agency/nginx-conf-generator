@@ -20,6 +20,11 @@ yq e '.websites[]' $YAML_FILE -o=json | while read -r website; do
     PORT=$(echo $website | jq -r '.port')
     MAIL=$(echo $website | jq -r '.mail')
 
+    echo "Креды для сайта"
+    echo "Домен $DOMAIN"
+    echo "Порт для прослушивания $PORT"
+    echo "Почта для сертификата $MAIL"
+
     # Проверка, был ли сайт уже добавлен
     if [ -f "/etc/nginx/sites-available/$DOMAIN" ]; then
         echo "Сайт для $DOMAIN уже настроен."
