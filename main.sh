@@ -65,3 +65,9 @@ yq e '.websites[]' $YAML_FILE -o=json | while IFS= read -r website; do
         sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$MAIL" --redirect
     else
         echo "Электронная почта для $DOMAIN не указана. Пропуск получения сертификата."
+    fi
+
+    echo "Сайт $DOMAIN настроен."
+done
+
+echo "Скрипт завершил работу."
