@@ -28,6 +28,7 @@ do
     echo "Порт: $PORT"
     echo "Email: $MAIL"
     echo "--------"
+    
     # Проверка, был ли сайт уже добавлен
     if [ -f "/etc/nginx/sites-available/$DOMAIN" ]; then
         echo "Сайт для $DOMAIN уже настроен."
@@ -45,34 +46,53 @@ do
         echo "Директория $WEB_ROOT для $DOMAIN уже существует. Пропуск создания."
     fi
 
-    # Создание конфигурации Nginx
-    echo "Создание конфигурации Nginx для $DOMAIN на порту $PORT..."
+    # Создание временной конфигурации Nginx для проверки Let's Encrypt для $DOMAIN
+    TEMP_CONFIG="/etc/nginx/sites-available/$DOMAIN-temp"
+    if [ ! -f "$TEMP_CONFIG" ]; then
+        echo "server {
+            listen 80;
+            server_name $DOMAIN;
+    
+            location / {
+                return 301 https://\$host\$request_uri;
+            }
+        }" | sudo tee "$TEMP_CONFIG"
+    
+        sudo ln -sf "$TEMP_CONFIG" "/etc/nginx/sites-enabled/$DOMAIN-temp"
+        sudo nginx -t && sudo systemctl reload nginx
+    fi
+
+    # Получение сертификата Let's Encrypt
+    if [ -n "$MAIL" ]; then
+        echo "Получение сертификата Let's Encrypt для $DOMAIN..."
+        sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$MAIL" --redirect
+        # Удаление временной конфигурации после получения сертификата
+        sudo rm "$TEMP_CONFIG"
+        sudo rm "/etc/nginx/sites-enabled/$DOMAIN-temp"
+    else
+        echo "Электронная почта для $DOMAIN не указана. Пропуск получения сертификата."
+    fi
+
+    # Создание конечной конфигурации Nginx с SSL для кастомного порта
+    echo "Создание конфигурации Nginx для $DOMAIN на порту $PORT с SSL..."
     echo "server {
-        listen $PORT;
-        listen [::]:$PORT;
-
+        listen $PORT ssl;
+        listen [::]:$PORT ssl;
         server_name $DOMAIN;
-
+    
+        ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+    
         root $WEB_ROOT;
         index index.html;
-
+    
         location / {
             try_files \$uri \$uri/ =404;
         }
     }" | sudo tee "$CONFIG"
 
-    # Активация конфигурации и перезапуск Nginx
     sudo ln -sf "/etc/nginx/sites-available/$DOMAIN" "/etc/nginx/sites-enabled/$DOMAIN"
-
     sudo nginx -t && sudo systemctl reload nginx
-
-    # Получение сертификата Let's Encrypt (опционально, убрать комментарий для включения)
-    if [ -n "$MAIL" ]; then
-        echo "Получение сертификата Let's Encrypt для $DOMAIN..."
-        sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$MAIL" --redirect
-    else
-        echo "Электронная почта для $DOMAIN не указана. Пропуск получения сертификата."
-    fi
 
     echo "Сайт $DOMAIN настроен."
 done
