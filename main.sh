@@ -14,17 +14,20 @@ if [ ! -f "$YAML_FILE" ]; then
     exit 1
 fi
 
-# Чтение файла и добавление сайтов
-yq e '.websites[]' $YAML_FILE -o=json | while IFS= read -r website; do
-    DOMAIN=$(echo $website | jq -r '.domain')
-    PORT=$(echo $website | jq -r '.port')
-    MAIL=$(echo $website | jq -r '.mail')
+# Получаем количество сайтов в файле
+count=$(yq e '.websites | length' $YAML_FILE)
 
-    echo "Креды для сайта"
-    echo "Домен $DOMAIN"
-    echo "Порт для прослушивания $PORT"
-    echo "Почта для сертификата $MAIL"
+# Итерация по каждому сайту
+for ((i=0; i<count; i++))
+do
+    DOMAIN=$(yq e ".websites[$i].domain" $YAML_FILE)
+    PORT=$(yq e ".websites[$i].port" $YAML_FILE)
+    MAIL=$(yq e ".websites[$i].mail" $YAML_FILE)
 
+    echo "Сайт: $DOMAIN"
+    echo "Порт: $PORT"
+    echo "Email: $MAIL"
+    echo "--------"
     # Проверка, был ли сайт уже добавлен
     if [ -f "/etc/nginx/sites-available/$DOMAIN" ]; then
         echo "Сайт для $DOMAIN уже настроен."
