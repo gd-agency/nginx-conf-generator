@@ -51,5 +51,6 @@ jobs:
           else
             echo "Директория успешно скопирована. Запуск скрипта..."
             chmod +x $REMOTE_DIRECTORY/main.sh
-            $REMOTE_DIRECTORY/main.sh ./websites.yaml
+            $REMOTE_DIRECTORY/main.sh $REMOTE_DIRECTORY/websites.yaml
           fi
+        
