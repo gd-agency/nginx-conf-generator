@@ -12,13 +12,13 @@ jobs:
     - name: Setup SSH
       uses: webfactory/ssh-agent@v0.5.3
       with:
-        ssh-private-key: ${{ secrets.SSH_KEY }}
+        ssh-private-key: ${{ secrets.SSH_KEY_PRIVATE }}
     - name: Copy Directory to VPS
       uses: appleboy/scp-action@master
       with:
-        host: ${{ secrets.HOST }}
+        host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        key: ${{ secrets.SSH_KEY_PRIVATE }}
         source: "path/to/your/local/directory/*"
         target: "${{ secrets.PROJECT_PATH }}${{ secrets.DEFAULT_PATH }}"
         strip_components: 0
@@ -26,9 +26,9 @@ jobs:
     - name: Execute Script on VPS
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
+        host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        key: ${{ secrets.SSH_KEY_PRIVATE }}
         script: |
           REMOTE_DIRECTORY="${{ secrets.PROJECT_PATH }}${{ secrets.DEFAULT_PATH }}"
           if [ ! -d "$REMOTE_DIRECTORY" ]; then
