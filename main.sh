@@ -9,7 +9,7 @@ fi
 YAML_FILE=$1
 
 # Проверка существования файла
-if [ ! -f "websites.yaml" ]; then
+if [ ! -f "$YAML_FILE" ]; then
     echo "Файл $YAML_FILE не найден"
     exit 1
 fi
