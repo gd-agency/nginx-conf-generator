@@ -37,10 +37,13 @@ do
     WEB_ROOT="/apps/web/$DOMAIN"
     CONFIG="/etc/nginx/sites-available/$DOMAIN"
 
-    # Создание директории для сайта
-    echo "Создание директории $WEB_ROOT для $DOMAIN..."
-    sudo mkdir -p "$WEB_ROOT"
-    echo "<html><head><title>Welcome to $DOMAIN</title></head><body><h1>$DOMAIN is working!</h1></body></html>" | sudo tee "$WEB_ROOT/index.html"
+    if [ ! -d "$WEB_ROOT" ]; then
+        echo "Создание директории $WEB_ROOT для $DOMAIN..."
+        sudo mkdir -p "$WEB_ROOT"
+        echo "<html><head><title>Welcome to $DOMAIN</title></head><body><h1>$DOMAIN is working!</h1></body></html>" | sudo tee "$WEB_ROOT/index.html"
+    else
+        echo "Директория $WEB_ROOT для $DOMAIN уже существует. Пропуск создания."
+    fi
 
     # Создание конфигурации Nginx
     echo "Создание конфигурации Nginx для $DOMAIN на порту $PORT..."
@@ -59,7 +62,8 @@ do
     }" | sudo tee "$CONFIG"
 
     # Активация конфигурации и перезапуск Nginx
-    sudo ln -sf "/etc/nginx/sites-available/$DOMAIN" "/etc/nginx/sites-enabled/"
+    sudo ln -sf "/etc/nginx/sites-available/$DOMAIN" "/etc/nginx/sites-enabled/$DOMAIN"
+
     sudo nginx -t && sudo systemctl reload nginx
 
     # Получение сертификата Let's Encrypt (опционально, убрать комментарий для включения)
